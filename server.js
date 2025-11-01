@@ -5,66 +5,64 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import bodyParser from "body-parser";
-import User from "./models/User.js";
+import User from "../models/User.js"; // adjust path if needed
 
 dotenv.config();
 
 const app = express();
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://pn-dsa-visuliazer.vercel.app"
+  "https://pn-dsa-visuliazer.vercel.app",
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
       console.warn("Blocked CORS for origin:", origin);
       return callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-}));
+    },
+    credentials: true,
+  })
+);
+
 app.use(bodyParser.json());
 
-// mongoose
-//   .connect(process.env.MONGO_URI, { dbName: "DSAVisualizer" })
-//   .then(() => console.log("MongoDB Connected"))
-//   .catch((err) => console.error("MongoDB connection error:", err));
-
+// ✅ Stable MongoDB connection (avoids multiple connects)
 let isConnected = false;
-async function ConnectedToDB() {
-      mongoose.connect(process.env.MONGO_URI, {
+
+async function connectDB() {
+  if (isConnected) return;
+  try {
+    const db = await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
-    })
-    .then(() => {
-      isConnected = true
-      console.log("MongoDB Connected")
-    })
-    .catch(err => console.error("MongoDB Connection Error:", err));
+      useUnifiedTopology: true,
+    });
+    isConnected = db.connections[0].readyState;
+    console.log("✅ MongoDB Connected");
+  } catch (err) {
+    console.error("❌ MongoDB Connection Error:", err.message);
+    throw err;
+  }
 }
 
-// middleware 
-app.use((req,res,next)=>{
-  if(!isConnected){
-    ConnectedToDB();
-  }
+// Middleware to ensure DB is connected
+app.use(async (req, res, next) => {
+  if (!isConnected) await connectDB();
   next();
-})
+});
 
-app.use("/",(req,res)=>{
+// ✅ Default route
+app.get("/", (req, res) => {
   res.send("HOME");
-})
+});
 
-// REGISTER
+// ✅ REGISTER
 app.post("/api/register", async (req, res) => {
   try {
-
     const { name, gender, dob, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -91,14 +89,13 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-
-// LOGIN
+// ✅ LOGIN
 app.post("/api/login", async (req, res) => {
   try {
-
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    if (!user)
+      return res.status(401).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
@@ -107,7 +104,7 @@ app.post("/api/login", async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email, name: user.name },
       process.env.JWT_SECRET,
-      { expiresIn: "7D" }
+      { expiresIn: "7d" }
     );
 
     res.json({ token });
@@ -117,7 +114,5 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-module.exports = app;
+// ✅ Export Express app as Vercel handler
+export default app;
