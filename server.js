@@ -28,34 +28,34 @@ app.use(
 
 // 🧩 MongoDB Connection (optimized for Vercel)
 
-mongoose
-  .connect(process.env.MONGO_URI, { dbName: "BookStore" })
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+// mongoose
+//   .connect(process.env.MONGO_URI, { dbName: "BookStore" })
+//   .then(() => console.log("MongoDB Connected"))
+//   .catch((err) => console.error("MongoDB connection error:", err));
 
-// let isConnected = false;
+let isConnected = false;
 
-// async function connectToDB() {
-//   if (isConnected) return;
+async function connectToDB() {
+  if (isConnected) return;
 
-//   try {
-//     const conn = await mongoose.connect(process.env.MONGO_URI, {
-//       useNewUrlParser: true,
-//       useUnifiedTopology: true,
-//     });
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
-//     isConnected = conn.connections[0].readyState === 1;
-//     console.log("✅ MongoDB connected successfully");
-//   } catch (err) {
-//     console.error("❌ MongoDB connection error:", err);
-//   }
-// }
+    isConnected = conn.connections[0].readyState === 1;
+    console.log("✅ MongoDB connected successfully");
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err);
+  }
+}
 
-// // Auto-connect to DB before each request
-// app.use(async (req, res, next) => {
-//   if (!isConnected) await connectToDB();
-//   next();
-// });
+// Auto-connect to DB before each request
+app.use(async (req, res, next) => {
+  if (!isConnected) await connectToDB();
+  next();
+});
 
 // --- User Schema ---
 const userSchema = new mongoose.Schema({
