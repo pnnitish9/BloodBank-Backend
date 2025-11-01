@@ -2,11 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "vercel-start": "node server.js"
+    "start": "node index.js",
+    "vercel-start": "node index.js"
   },
   "keywords": [],
   "author": "",
