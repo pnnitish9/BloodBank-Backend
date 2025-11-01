@@ -31,31 +31,31 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
-mongoose
-  .connect(process.env.MONGO_URI, { dbName: "DSAVisualizer" })
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+// mongoose
+//   .connect(process.env.MONGO_URI, { dbName: "DSAVisualizer" })
+//   .then(() => console.log("MongoDB Connected"))
+//   .catch((err) => console.error("MongoDB connection error:", err));
 
-// let isConnected = false;
-// async function ConnectedToDB() {
-//       mongoose.connect(process.env.MONGO_URI, {
-//       useNewUrlParser: true,
-//       useUnifiedTopology: true
-//     })
-//     .then(() => {
-//       isConnected = true
-//       console.log("MongoDB Connected")
-//     })
-//     .catch(err => console.error("MongoDB Connection Error:", err));
-// }
+let isConnected = false;
+async function ConnectedToDB() {
+      mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    })
+    .then(() => {
+      isConnected = true
+      console.log("MongoDB Connected")
+    })
+    .catch(err => console.error("MongoDB Connection Error:", err));
+}
 
-// // middleware 
-// app.use((req,res,next)=>{
-//   if(!isConnected){
-//     ConnectedToDB();
-//   }
-//   next();
-// })
+// middleware 
+app.use((req,res,next)=>{
+  if(!isConnected){
+    ConnectedToDB();
+  }
+  next();
+})
 
 app.use("/",(req,res)=>{
   res.send("HOME");
