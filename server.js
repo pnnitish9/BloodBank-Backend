@@ -57,6 +57,9 @@ mongoose
 //   next();
 // })
 
+app.use("/",(req,res)=>{
+  res.send("HOME");
+})
 
 // REGISTER
 app.post("/api/register", async (req, res) => {
